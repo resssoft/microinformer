@@ -1,0 +1,211 @@
+<html lang="">
+<head>
+    <title>1</title>
+    <style type="text/css">
+        body {
+            background-color: #0e0f16;
+            color: #8ad4ee;
+            font-size: 36px;
+        }
+        div#error {
+            height: 38px;
+            background: #cf3737;
+            color: #fff;
+            display: none;
+        }
+        #count {
+            opacity: 0.2;
+        }
+        #main {
+            text-align: center;
+            width: 60%;
+            margin: 20px auto 0 auto;
+        }
+        #main {
+            width: 60%;
+            margin: 20px auto 0 auto;
+        }
+        #content {
+            width: 100%;
+        }
+        #foot {
+            bottom: 0;
+            position: fixed;
+            width: 97%;
+        }
+        #foot {
+            width: 97%;
+        }
+        #left-foot {
+             float: left;
+        }
+        #right-foot {
+            float: right;
+        }
+        .item {
+            display: flex;
+            color: #d3d3d3;
+            position: relative;
+        }
+        .item::after {
+            content: '';
+            display: block;
+            left: 50px;
+            width: 100px;
+            border-bottom: 1px #71c107 solid;
+            position: absolute;
+            bottom: 0;
+        }
+        .item-time {
+            width: 100px;
+            font-size: 0.8em;
+            color: #5e5e5e;
+            vertical-align: middle;
+            text-align: end;
+        }
+        .item-name {
+            padding: 5px 15px 5px 1px;
+            border-left: 1px #71c107 solid;
+            font-weight: 900;
+        }
+        .item-content {
+            padding: 5px 3px 5px 1px;
+            font-weight: 300;
+            opacity: 0.8;
+        }
+        .item-error {
+            padding: 5px 3px 5px 1px;
+            color: orangered;
+        }
+
+    </style>
+</head>
+<body>
+<div id="error"></div>
+<div id="content">
+    <div id="main">
+        <div class="item"></div>
+    </div>
+    <div id="foot">
+        <div id="left-foot"><span id="count"></span></div>
+        <div id="right-foot"></div>
+    </div>
+</div>
+</body>
+<script type="application/javascript">
+    let dataTimeout = 55000;
+    let settingsTimeout = 5000;
+    let iteration = 0;
+    let countBlock = top.document.getElementById('count');
+    let errorBlock = top.document.getElementById("error");
+    console.log(countBlock, errorBlock);
+
+
+    async function getSettings() {
+        const url = "/settings.json";
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                console.log("!ok response settings", response);
+                errorBlock.style.display = 'block';
+                errorBlock.textContent = "Error settings connect " + response
+            }
+            const json = await response.json();
+            if (json === undefined || json === null) {
+                console.log("json settings undefined");
+            }
+            if (json.reboot === true && iteration !== 1) {
+                window.location.reload();
+            }
+            if (json.timeout !== undefined && json.timeout != 0) {
+                dataTimeout = json.timeout
+            }
+        } catch (error) {
+            console.error(error.message);
+            errorBlock.style.display = 'block';
+            errorBlock.textContent = "Error api connect " + error.message
+        }
+        setTimeout(getSettings, settingsTimeout);
+    }
+
+    async function getData() {
+        iteration++;
+
+        if (countBlock != null) {
+            console.log("countBlock null");
+            countBlock.textContent = String(iteration)
+        }
+        const url = "/api.json";
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                console.log("!ok response", response);
+                errorBlock.style.display = 'block';
+                errorBlock.textContent = "Error api connect " + response
+            }
+            const json = await response.json();
+            if (json === undefined || json === null) {
+                console.log("json undefined");
+            }
+            if (json.reboot === true && iteration !== 1) {
+                window.location.reload();
+            }
+            if (json.info !== undefined || json !== null) {
+                for (const i in json.info) {
+                    errorBlock.style.display = 'none';
+                    console.log(json.info[i]);
+                    let block = top.document.getElementById(json.info[i].block);
+
+                    let time, name, content, error;
+                    let div = top.document.getElementById(json.info[i].id)
+                    if (div === undefined || div === null) {
+                        div = document.createElement("div");
+                        div.setAttribute("class", "item");
+                        div.setAttribute("id", json.info[i].id);
+                        block.append(div);
+
+                        time = document.createElement("span");
+                        name = document.createElement("span");
+                        content = document.createElement("span");
+                        error = document.createElement("span");
+
+                        time.setAttribute("class", "item-time");
+                        name.setAttribute("class", "item-name");
+                        content.setAttribute("class", "item-content");
+                        error.setAttribute("class", "item-error");
+
+                        time.setAttribute("id", json.info[i].id+"-item-time");
+                        name.setAttribute("id", json.info[i].id+"-item-name");
+                        content.setAttribute("id", json.info[i].id+"-item-content");
+                        error.setAttribute("id", json.info[i].id+"-item-error");
+
+                        div.append(time);
+                        div.append(name);
+                        div.append(content);
+                        div.append(error);
+                    } else {
+                        time = top.document.getElementById(json.info[i].id+"-item-time");
+                        name = top.document.getElementById(json.info[i].id+"-item-name");
+                        content = top.document.getElementById(json.info[i].id+"-item-content");
+                        error = top.document.getElementById(json.info[i].id+"-item-error");
+                    }
+                    //console.log("test", div, time);
+
+                    time.textContent = json.info[i].time;
+                    name.textContent = json.info[i].name;
+                    content.textContent = json.info[i].value;
+                    error.textContent = json.info[i].error;
+                }
+            }
+            //console.log(json);
+        } catch (error) {
+            console.error(error.message);
+            errorBlock.style.display = 'block';
+            errorBlock.textContent = "Error api connect " + error.message
+        }
+        setTimeout(getData, dataTimeout);
+    }
+    getSettings();
+    getData();
+</script>
+</html>
