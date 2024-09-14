@@ -1,10 +1,11 @@
 # microinformer
-web informer with go backand for displayed by small monitor on the microPC
+small app - web informer with go backend for displayed by small monitor on the microPC
+Be careful! Do not use without a balancer, since this project is intended for local servers, and it can run any applications on it, which will be unsafe for public servers
 
 clone project ```git clone git@github.com:resssoft/microinformer.git```
 cd project root folder (for example: ```/home/pi/apps/microinformer```)
 
-### Build backend
+## Build backend
 ```go build -o /usr/bin/microinformer ./cmd/main.go```
 
 ## App control by linux system
@@ -15,12 +16,12 @@ Check status ```systemctl -l status microinformer.service``` <br />
 Reload systemd daemon after fixes ```systemctl daemon-reload``` <br />
 Show log ```journalctl -u microinformer.service --no-pager | tail -10``` <br />
 
-### prepare frontend
+## prepare frontend
 ```sudo makedir /opt/microinformer/```
 ```sudo cp -r ./frontend/```
 ```sudo chmod -R 755 /opt/microinformer/```
 
-### configure for view
+## configure for view
 for start by default page on the micro PC
 ``` nano $HOME/.config/lxsession/LXDE-pi/autostart```
 
