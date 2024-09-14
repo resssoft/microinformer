@@ -1,0 +1,11 @@
+[Unit]
+Description=microinformer
+
+[Service]
+ExecStart=/usr/bin/microinformer
+WorkingDirectory=/opt/microinformer/
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
