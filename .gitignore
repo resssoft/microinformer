@@ -37,3 +37,6 @@ bin/*
 build/package/*/*
 !build/package/*/build.sh
 vendor
+
+*.json
+uploads/*

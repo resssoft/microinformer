@@ -6,7 +6,7 @@ let errorBlock = top.document.getElementById("error");
 console.log(countBlock, errorBlock);
 
 async function getSettings() {
-    const url = "/settings.json";
+    const url = "/api/settings/data.json";
     try {
         const response = await fetch(url);
         if (!response.ok) {
@@ -29,7 +29,6 @@ async function getSettings() {
         errorBlock.style.display = 'block';
         errorBlock.textContent = "Error api connect " + error.message
     }
-    setTimeout(getSettings, settingsTimeout);
 }
 
 async function getData() {
@@ -39,7 +38,7 @@ async function getData() {
         console.log("countBlock null");
         countBlock.textContent = String(iteration)
     }
-    const url = "/api.json";
+    const url = "/api/items/data.json";
     try {
         const response = await fetch(url);
         if (!response.ok) {
@@ -107,7 +106,6 @@ async function getData() {
         errorBlock.style.display = 'block';
         errorBlock.textContent = "Error api connect " + error.message
     }
-    setTimeout(getData, dataTimeout);
 }
 getSettings();
 getData();

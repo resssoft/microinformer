@@ -1,13 +1,16 @@
 package manager
 
 type Info struct {
-	Id      string `json:"id"`
-	Bash    bool   `json:"bash"`
+	Id      string `json:"id,omitempty"`
+	Bash    bool   `json:"bash,omitempty"`
 	Command string `json:"command"`
-	Panel   string `json:"panel"`
-	Block   string `json:"block"`
+	Panel   string `json:"panel,omitempty"`
+	Block   string `json:"block,omitempty"`
 	Name    string `json:"name"`
-	Value   string `json:"value"`
-	Error   string `json:"error"`
-	Time    string `json:"time"`
+	Value   string `json:"value,omitempty"`
+	Error   string `json:"error,omitempty"`
+	Time    string `json:"time,omitempty"`
+
+	Once   bool `json:"once,omitempty"`
+	KeepBy int  `json:"keep_by,omitempty"`
 }

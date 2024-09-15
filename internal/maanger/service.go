@@ -2,6 +2,7 @@ package manager
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -10,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"microinformer/internal/repository"
 	"microinformer/internal/settings"
 )
 
@@ -17,25 +19,57 @@ type Service struct {
 	Items    []Info
 	Settings *settings.Service
 	mutex    sync.Mutex
+	repo     *repository.Service
 }
 
 func NewService(
 	settingsService *settings.Service) *Service {
 	return &Service{
 		Settings: settingsService,
+		repo:     repository.NewFileRepo("items.json"),
+	}
+}
+
+func (s *Service) load() {
+	rawData, err := s.repo.Load()
+	if err != nil {
+		fmt.Println("manager load from disk err", err)
+	} else {
+		var items []Info
+		err = json.Unmarshal(rawData, &items)
+		if err != nil {
+			fmt.Println("manager Unmarshal items err", err)
+		} else {
+			s.Items = items
+		}
+	}
+}
+
+func (s *Service) save() {
+	data, err := json.MarshalIndent(s.Items, "", "  ")
+	if err != nil {
+		fmt.Println("manager marshalling items err", err)
+	}
+	err = s.repo.Save(data)
+	if err != nil {
+		fmt.Println("manager save to disk err", err)
 	}
 }
 
 func (s *Service) Configure() {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	s.Items = append(s.Items, s.NewItem("date", "System date", "right-foot", "main", false))
-	s.Items = append(s.Items, s.NewItem("hostname && hostname -I", "host", "main", "main", true))
-	s.Items = append(s.Items, s.NewItem("cat /proc/meminfo | grep 'MemFree:'", "meminfo", "main", "main", true))
-	s.Items = append(s.Items, s.NewItem("ping -c 1 8.8.8.8 | grep packet", "ping88", "main", "main", true))
-	s.Items = append(s.Items, s.NewItem("", "go version", "main", "content", true))
+	s.load()
+	if len(s.Items) == 0 {
+		s.Items = append(s.Items, s.NewItem("date", "System date", "right-foot", "main", false))
+		s.Items = append(s.Items, s.NewItem("hostname && hostname -I", "host", "main", "main", true))
+		s.Items = append(s.Items, s.NewItem("cat /proc/meminfo | grep 'MemFree:'", "meminfo", "main", "main", true))
+		s.Items = append(s.Items, s.NewItem("ping -c 1 8.8.8.8 | grep packet", "ping88", "main", "main", true))
+		s.Items = append(s.Items, s.NewItem("", "go version", "main", "content", true))
+	}
 	data, err := json.Marshal(s.Items)
 	fmt.Println(string(data), err)
+	s.save()
 }
 
 func (s *Service) GetInfo() []Info {
@@ -43,6 +77,9 @@ func (s *Service) GetInfo() []Info {
 	list = s.Items
 	for index, item := range list {
 		list[index] = s.run(item)
+		if item.Once {
+			_ = s.DelItem(item)
+		}
 	}
 	return list
 }
@@ -78,13 +115,18 @@ func (s *Service) run(i Info) Info {
 	return i
 }
 
-func (s *Service) AddItem(i Info) {
+func (s *Service) AddItem(i Info) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
+	if i.Command == "" || i.Name == "" {
+		return errors.New("invalid command")
+	}
 	s.Items = append(s.Items, i)
+	s.save()
+	return nil
 }
 
-func (s *Service) DelItem(i Info) {
+func (s *Service) DelItem(i Info) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	newList := make([]Info, 0)
@@ -94,6 +136,22 @@ func (s *Service) DelItem(i Info) {
 		}
 	}
 	s.Items = newList
+	s.save()
+	return nil
+}
+
+func (s *Service) RunItem(i Info) error {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	newList := make([]Info, 0)
+	for _, item := range s.Items {
+		if item.Name != i.Name && item.Command != i.Command {
+			newList = append(newList, item)
+		}
+	}
+	s.Items = newList
+	s.save()
+	return nil
 }
 
 // func Command(command, name, block, panel string, bash bool) Info {

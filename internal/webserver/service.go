@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	manager "microinformer/internal/maanger"
 	"microinformer/internal/settings"
@@ -34,10 +35,20 @@ func NewService(
 }
 
 func (s Service) Start() {
+	err := os.MkdirAll("./uploads", os.ModePerm)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	fmt.Println("Start server by :8081")
-	http.HandleFunc("/api.json", s.api)
-	http.HandleFunc("/update", s.update)
-	http.HandleFunc("/settings.json", s.setting)
-	http.Handle("/page/", http.StripPrefix("/page", http.FileServer(http.Dir("./frontend"))))
+	http.HandleFunc("/api/items/data.json", s.api)
+	http.HandleFunc("/api/items/add", s.addItem)
+	http.HandleFunc("/api/items/del", s.delItem)
+	http.HandleFunc("/api/items/update", s.update)
+	http.HandleFunc("/api/upload", s.FileUploadHandler)
+	http.HandleFunc("/api/settings/data.json", s.setting)
+	http.Handle("/page/", http.StripPrefix("/page", http.FileServer(http.Dir("./frontend/panel"))))
+	http.Handle("/admin/", http.StripPrefix("/admin", http.FileServer(http.Dir("./frontend/admin"))))
+	http.Handle("/uploads/", http.StripPrefix("/uploads", http.FileServer(http.Dir("./uploads"))))
 	log.Fatal(http.ListenAndServe(":8081", nil))
 }
