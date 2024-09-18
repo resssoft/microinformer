@@ -67,8 +67,6 @@ func (s *Service) Configure() {
 		s.Items = append(s.Items, s.NewItem("ping -c 1 8.8.8.8 | grep packet", "ping88", "main", "main", true))
 		s.Items = append(s.Items, s.NewItem("", "go version", "main", "content", true))
 	}
-	data, err := json.Marshal(s.Items)
-	fmt.Println(string(data), err)
 	s.save()
 }
 

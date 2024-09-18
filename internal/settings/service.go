@@ -36,6 +36,7 @@ func (s *Service) SetReboot() {
 }
 
 func (s *Service) Get() *Public {
+	s.Data.Version = Version
 	return s.Data
 }
 

@@ -6,10 +6,15 @@ import (
 	"microinformer/internal/repository"
 )
 
+const (
+	Version = "1.0.0.14"
+)
+
 type Public struct {
 	Timeout int    `json:"timeout"`
 	Reboot  bool   `json:"reboot"`
 	Panel   *Panel `json:"panel"`
+	Version string `json:"version"`
 }
 
 type Panel struct {

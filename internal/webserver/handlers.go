@@ -28,7 +28,7 @@ func (s Service) list(w http.ResponseWriter, r *http.Request) {
 func (s Service) update(w http.ResponseWriter, r *http.Request) {
 	var data response
 	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
+		http.Error(w, "Invalid input"+err.Error(), http.StatusBadRequest)
 		return
 	}
 	if data.Settings != nil {
@@ -46,9 +46,11 @@ func (s Service) update(w http.ResponseWriter, r *http.Request) {
 func (s Service) addItem(w http.ResponseWriter, r *http.Request) {
 	var data manager.Info
 	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
+		http.Error(w, "Invalid input"+err.Error(), http.StatusBadRequest)
 		return
 	}
+	datastring, errJson := json.MarshalIndent(data, "", "  ")
+	fmt.Println(string(datastring), errJson)
 	err := s.Manager.AddItem(data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -64,7 +66,7 @@ func (s Service) addItem(w http.ResponseWriter, r *http.Request) {
 func (s Service) delItem(w http.ResponseWriter, r *http.Request) {
 	var data manager.Info
 	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
+		http.Error(w, "Invalid input"+err.Error(), http.StatusBadRequest)
 		return
 	}
 	err := s.Manager.DelItem(data)
