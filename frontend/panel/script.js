@@ -45,6 +45,13 @@ async function getSettings() {
                         block = document.createElement("div");
                         row.setAttribute("class", "block");
                         block.setAttribute("id", json.panel.rows[i].blocks[y].id);
+                        if (json.panel.rows[i].blocks[y].width !== undefined) {
+                            block.setAttribute("width", json.panel.rows[i].blocks[y].width);
+                            block.setAttribute("display", "table");
+                        }
+                        if (json.panel.rows[i].blocks[y].height !== undefined) {
+                            block.setAttribute("height", json.panel.rows[i].blocks[y].height);
+                        }
                         row.append(block);
                     }
                     container.append(row);
@@ -97,7 +104,7 @@ async function getData() {
                 errorBlock.style.display = 'none';
                 let block = top.document.getElementById(json.info[i].block);
 
-                let time, name, content, error;
+                let time, title, content, error;
                 let div = top.document.getElementById(json.info[i].id);
                 if (div === undefined || div === null) {
                     if (json.info[i].once === true) {
@@ -115,34 +122,34 @@ async function getData() {
                     block.append(div);
 
                     time = document.createElement("span");
-                    name = document.createElement("span");
+                    title = document.createElement("span");
                     content = document.createElement("span");
                     error = document.createElement("span");
 
                     time.setAttribute("class", "item-time");
-                    name.setAttribute("class", "item-name");
+                    title.setAttribute("class", "item-title");
                     content.setAttribute("class", "item-content");
                     error.setAttribute("class", "item-error");
 
                     time.setAttribute("id", json.info[i].id+"-item-time");
-                    name.setAttribute("id", json.info[i].id+"-item-name");
+                    title.setAttribute("id", json.info[i].id+"-item-title");
                     content.setAttribute("id", json.info[i].id+"-item-content");
                     error.setAttribute("id", json.info[i].id+"-item-error");
 
                     div.append(time);
-                    div.append(name);
+                    div.append(title);
                     div.append(content);
                     div.append(error);
                 } else {
                     time = top.document.getElementById(json.info[i].id+"-item-time");
-                    name = top.document.getElementById(json.info[i].id+"-item-name");
+                    title = top.document.getElementById(json.info[i].id+"-item-title");
                     content = top.document.getElementById(json.info[i].id+"-item-content");
                     error = top.document.getElementById(json.info[i].id+"-item-error");
                 }
                 //console.log("test", div, time);
 
                 time.textContent = json.info[i].time;
-                name.textContent = json.info[i].name;
+                title.textContent = json.info[i].title;
                 content.textContent = json.info[i].value;
                 error.textContent = json.info[i].error;
             }
