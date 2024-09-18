@@ -115,6 +115,12 @@ func (s *Service) run(i Info) Info {
 	return i
 }
 
+func (s *Service) ListItem() []Info {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	return s.Items
+}
+
 func (s *Service) AddItem(i Info) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
@@ -122,6 +128,14 @@ func (s *Service) AddItem(i Info) error {
 		return errors.New("invalid command")
 	}
 	s.Items = append(s.Items, i)
+	s.save()
+	return nil
+}
+
+func (s *Service) Update(list []Info) error {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	s.Items = list
 	s.save()
 	return nil
 }

@@ -9,7 +9,21 @@ import (
 	"path/filepath"
 
 	manager "microinformer/internal/maanger"
+	gen "microinformer/pkg/generator"
 )
+
+func (s Service) list(w http.ResponseWriter, r *http.Request) {
+	data := s.Manager.ListItem()
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	err := json.NewEncoder(w).Encode(data)
+	if err != nil {
+		_, err := fmt.Fprintf(w, "Hi")
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+}
 
 func (s Service) update(w http.ResponseWriter, r *http.Request) {
 	var data response
@@ -20,8 +34,8 @@ func (s Service) update(w http.ResponseWriter, r *http.Request) {
 	if data.Settings != nil {
 		s.Settings.Set(data.Settings)
 	}
-	if data.Info != nil {
-		s.Manager.AddItem(*data.Info)
+	if len(data.Items) > 0 {
+		_ = s.Manager.Update(data.Items)
 		w.WriteHeader(http.StatusCreated)
 		return
 	}
@@ -90,11 +104,16 @@ func (s Service) api(w http.ResponseWriter, r *http.Request) {
 	s.Settings.NoReboot()
 }
 
+func (s Service) pageReboot(w http.ResponseWriter, r *http.Request) {
+	s.Settings.SetReboot()
+}
+
 func (s Service) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
 	// file limit 10MB
 	r.ParseMultipartForm(10 << 20)
 
 	// get uploaded file
+	newFileName := r.PostFormValue("filename")
 	file, handler, err := r.FormFile("uploadfile")
 	if err != nil {
 		http.Error(w, "Error retrieving the file", http.StatusBadRequest)
@@ -109,7 +128,11 @@ func (s Service) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("MIME Header: %+v\n", handler.Header)
 
 	// create file on the server
-	dst, err := os.Create(filepath.Join("./uploads", handler.Filename)) //TODO: generate random name and return
+	if newFileName == "" {
+		newFileName = gen.LatinStr(10) + filepath.Ext(handler.Filename)
+	}
+	fmt.Printf("new File name: %+v\n", newFileName)
+	dst, err := os.Create(filepath.Join("./uploads", newFileName))
 	if err != nil {
 		http.Error(w, "Error creating file on server", http.StatusInternalServerError)
 		fmt.Println("Error creating file:", err)
@@ -125,5 +148,5 @@ func (s Service) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Отправляем ответ клиенту
-	fmt.Fprintf(w, "File uploaded successfully: %s\n", handler.Filename)
+	fmt.Fprintf(w, "%s", newFileName)
 }

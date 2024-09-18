@@ -13,7 +13,8 @@ type Public struct {
 }
 
 type Panel struct {
-	Rows []Row `json:"rows"`
+	ShowCount bool  `json:"show_count"`
+	Rows      []Row `json:"rows"`
 }
 
 type Row struct {

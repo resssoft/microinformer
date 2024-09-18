@@ -21,7 +21,7 @@ type request struct {
 }
 
 type response struct {
-	Info     *manager.Info    `json:"info,omitempty"`
+	Items    []manager.Info   `json:"items,omitempty"`
 	Settings *settings.Public `json:"settings,omitempty"`
 }
 
@@ -42,11 +42,13 @@ func (s Service) Start() {
 
 	fmt.Println("Start server by :8081")
 	http.HandleFunc("/api/items/data.json", s.api)
+	http.HandleFunc("/api/items/list", s.list)
 	http.HandleFunc("/api/items/add", s.addItem)
 	http.HandleFunc("/api/items/del", s.delItem)
 	http.HandleFunc("/api/items/update", s.update)
-	http.HandleFunc("/api/upload", s.FileUploadHandler)
+	http.HandleFunc("/api/files/upload", s.FileUploadHandler)
 	http.HandleFunc("/api/settings/data.json", s.setting)
+	http.HandleFunc("/api/page/reboot", s.pageReboot)
 	http.Handle("/page/", http.StripPrefix("/page", http.FileServer(http.Dir("./frontend/panel"))))
 	http.Handle("/admin/", http.StripPrefix("/admin", http.FileServer(http.Dir("./frontend/admin"))))
 	http.Handle("/uploads/", http.StripPrefix("/uploads", http.FileServer(http.Dir("./uploads"))))

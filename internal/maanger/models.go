@@ -7,6 +7,7 @@ type Info struct {
 	Panel   string `json:"panel,omitempty"`
 	Block   string `json:"block,omitempty"`
 	Name    string `json:"name"`
+	Title   string `json:"title"`
 	Value   string `json:"value,omitempty"`
 	Error   string `json:"error,omitempty"`
 	Time    string `json:"time,omitempty"`
