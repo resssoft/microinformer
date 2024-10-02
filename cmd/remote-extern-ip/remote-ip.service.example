@@ -1,0 +1,11 @@
+[Unit]
+Description=remote-ip
+
+[Service]
+ExecStart=/usr/bin/remote-ip
+WorkingDirectory=/opt/remote-ip/
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
