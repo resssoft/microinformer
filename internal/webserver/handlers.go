@@ -13,12 +13,13 @@ import (
 )
 
 func (s Service) list(w http.ResponseWriter, r *http.Request) {
+	s.logRequest(r)
 	data := s.Manager.ListItem()
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	err := json.NewEncoder(w).Encode(data)
 	if err != nil {
-		_, err := fmt.Fprintf(w, "Hi")
+		_, err := fmt.Fprintf(w, "list error: %v", err)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -26,6 +27,7 @@ func (s Service) list(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s Service) update(w http.ResponseWriter, r *http.Request) {
+	s.logRequest(r)
 	var data response
 	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
 		http.Error(w, "Invalid input"+err.Error(), http.StatusBadRequest)
@@ -43,27 +45,29 @@ func (s Service) update(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (s Service) addItem(w http.ResponseWriter, r *http.Request) {
-	var data manager.Info
+func (s Service) importItems(w http.ResponseWriter, r *http.Request) {
+	s.logRequest(r)
+	var data manager.ImportItems
 	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
 		http.Error(w, "Invalid input"+err.Error(), http.StatusBadRequest)
 		return
 	}
-	datastring, errJson := json.MarshalIndent(data, "", "  ")
-	fmt.Println(string(datastring), errJson)
-	err := s.Manager.AddItem(data)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	if !data.Once {
-		s.Settings.SetReboot()
-	}
+	dataJson, errJson := json.MarshalIndent(data, "", "  ")
+	fmt.Println(string(dataJson), errJson) // debug
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	return
+	result := s.Manager.AddItems(data)
+	err := json.NewEncoder(w).Encode(result)
+	if err != nil {
+		_, err := fmt.Fprintf(w, "import error: %v", err)
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
 }
 
 func (s Service) delItem(w http.ResponseWriter, r *http.Request) {
+	s.logRequest(r)
 	var data manager.Info
 	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
 		http.Error(w, "Invalid input"+err.Error(), http.StatusBadRequest)
@@ -80,11 +84,12 @@ func (s Service) delItem(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s Service) setting(w http.ResponseWriter, r *http.Request) {
+	s.logRequest(r)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	err := json.NewEncoder(w).Encode(s.Settings.Data)
 	if err != nil {
-		_, err := fmt.Fprintf(w, "Hi")
+		_, err := fmt.Fprintf(w, "setting error: %v", err)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -93,12 +98,13 @@ func (s Service) setting(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s Service) api(w http.ResponseWriter, r *http.Request) {
+	s.logRequest(r)
 	data := request{Info: s.Manager.GetInfo(), Reboot: s.Settings.Data.Reboot}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	err := json.NewEncoder(w).Encode(data)
 	if err != nil {
-		_, err := fmt.Fprintf(w, "Hi")
+		_, err := fmt.Fprintf(w, "api data error: %v", err)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -107,18 +113,24 @@ func (s Service) api(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s Service) pageReboot(w http.ResponseWriter, r *http.Request) {
+	s.logRequest(r)
 	s.Settings.SetReboot()
+	w.WriteHeader(http.StatusOK)
 }
 
 func (s Service) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
+	s.logRequest(r)
 	// file limit 10MB
-	r.ParseMultipartForm(10 << 20)
+	err := r.ParseMultipartForm(10 << 20)
+	if err != nil {
+		fmt.Println("Error ParseMultipartForm:", err)
+	}
 
 	// get uploaded file
 	newFileName := r.PostFormValue("filename")
 	file, handler, err := r.FormFile("uploadfile")
 	if err != nil {
-		http.Error(w, "Error retrieving the file", http.StatusBadRequest)
+		http.Error(w, "Error retrieving the file: "+err.Error(), http.StatusBadRequest)
 		fmt.Println("Error retrieving the file:", err)
 		return
 	}
@@ -151,4 +163,8 @@ func (s Service) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Отправляем ответ клиенту
 	fmt.Fprintf(w, "%s", newFileName)
+}
+
+func (s Service) logRequest(r *http.Request) {
+	fmt.Println(r.URL)
 }

@@ -2,7 +2,6 @@ package manager
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -75,7 +74,7 @@ func (s *Service) GetInfo() []Info {
 	list = s.Items
 	for index, item := range list {
 		list[index] = s.run(item)
-		if item.Once {
+		if item.Modal {
 			_ = s.DelItem(item)
 		}
 	}
@@ -119,21 +118,40 @@ func (s *Service) ListItem() []Info {
 	return s.Items
 }
 
-func (s *Service) AddItem(i Info) error {
+// TODO: change index field and usage that
+
+func (s *Service) AddItems(data ImportItems) AddedResult {
+	var result AddedResult
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	if i.Command == "" || i.Name == "" {
-		return errors.New("invalid command")
+	modalExist := false
+	for _, item := range data.Items {
+		if item.Command == "" || item.Name == "" {
+			item.Error = "command or name empty"
+			result.Excluded = append(result.Excluded, item)
+			continue
+		}
+		item = s.PrepareItem(item)
+		result.Count++
+		s.Items = append(s.Items, item)
+		if item.Modal {
+			modalExist = true
+		}
 	}
-	s.Items = append(s.Items, i)
+	if modalExist {
+		s.Settings.SetReboot()
+	}
 	s.save()
-	return nil
+	return result
 }
 
 func (s *Service) Update(list []Info) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	s.Items = list
+	for _, item := range list {
+		item = s.PrepareItem(item)
+		s.Items = append(s.Items, item)
+	}
 	s.save()
 	return nil
 }
@@ -172,6 +190,7 @@ func (s *Service) Command(i Info) Info {
 	var err error
 	var code int
 	start := time.Now()
+	i.Error = ""
 
 	if i.Bash {
 		out, code, err = s.RunRaw("bash", []string{"-c", i.Command}, []string{})
@@ -232,4 +251,9 @@ func duration(t time.Time) string {
 		result = fmt.Sprintf("%v", dur)
 	}
 	return result
+}
+
+func (s *Service) PrepareItem(i Info) Info {
+	i.Id = strings.Replace(i.Block+i.Name, " ", "", -1) // added command by b64
+	return i
 }

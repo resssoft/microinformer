@@ -6,7 +6,7 @@ clone project ```git clone git@github.com:resssoft/microinformer.git```
 cd project root folder (for example: ```/home/pi/apps/microinformer```)
 
 ## Build backend
-```go build -o /usr/bin/microinformer ./cmd/main.go```
+```go build -o /usr/bin/microinformer ./cmd/data-grabber/main.go```
 
 ## App control by linux system
 Copy file microinformer.service.example to ```/etc/systemd/system/microinformer.service``` and fix environments. <br />
@@ -30,4 +30,4 @@ for start by default page on the micro PC
 and append ```@chromium-browser -e --kiosk -a http://127.0.0.1:8081/page/index.html```
 
 ### build after configured
-```cd /home/pi/apps/microinformer && git pull && sudo /usr/local/go/bin/go build -o /usr/bin/microinformer  ./cmd/main.go && cp -r ./frontend /opt/microinformer/ && systemctl restart microinformer.service```
+```cd /home/pi/apps/microinformer && git pull && sudo /usr/local/go/bin/go build -o /usr/bin/microinformer ./cmd/data-grabber/main.go && sudo cp -r ./frontend /opt/microinformer/ && sudo systemctl restart microinformer.service```

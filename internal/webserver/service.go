@@ -43,7 +43,7 @@ func (s Service) Start() {
 	fmt.Println("Start server by :8081")
 	http.HandleFunc("/api/items/data.json", s.api)
 	http.HandleFunc("/api/items/list", s.list)
-	http.HandleFunc("/api/items/add", s.addItem)
+	http.HandleFunc("/api/items/import", s.importItems)
 	http.HandleFunc("/api/items/del", s.delItem)
 	http.HandleFunc("/api/items/update", s.update)
 	http.HandleFunc("/api/files/upload", s.FileUploadHandler)
